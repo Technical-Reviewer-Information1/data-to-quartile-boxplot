@@ -50,8 +50,8 @@ if df is not None:
 
             st.subheader('選択した変数の箱ひげ図（比較）')
             # 選択した変数の箱ひげ図を一つの図で表示
-            melted_df = df[selected_cols].melt(var_name='variable', value_name='value')
-            fig = px.box(melted_df, x='変数', y='値', title='選択した数値変数の箱ひげ図')
+            melted_df = df[selected_cols].melt(var_name='Variable', value_name='Value')
+            fig = px.box(melted_df, x='Variable', y='Value', title='選択した数値変数の箱ひげ図')
             st.plotly_chart(fig)
 
             # 各変数の箱ひげ図を個別に表示
