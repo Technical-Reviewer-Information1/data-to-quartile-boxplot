@@ -38,16 +38,30 @@ if df is not None:
 
     if numerical_cols:
         st.subheader('数値変数の四分位数')
-        quartiles_df = df[numerical_cols].quantile([0, 0.25, 0.5, 0.75, 1]).transpose()
-        quartiles_df.columns = ['Min', '25%', '50%', '75%', 'Max']
-        st.write(quartiles_df)
 
-        st.subheader('箱ひげ図')
-        for col in numerical_cols:
-            fig = px.box(df, y=col, title=f'【{col}】 の箱ひげ図')
+        # 数値変数の選択
+        selected_cols = st.multiselect('可視化する数値変数を選択してください:', numerical_cols, default=numerical_cols)
+
+        if selected_cols:
+            # 選択した変数の四分位数を表示
+            quartiles_df = df[selected_cols].quantile([0, 0.25, 0.5, 0.75, 1]).transpose()
+            quartiles_df.columns = ['Min', '25%', '50%', '75%', 'Max']
+            st.write(quartiles_df)
+
+            st.subheader('選択した変数の箱ひげ図（比較）')
+            # 選択した変数の箱ひげ図を一つの図で表示
+            melted_df = df[selected_cols].melt(var_name='Variable', value_name='Value')
+            fig = px.box(melted_df, x='Variable', y='Value', title='選択した数値変数の箱ひげ図')
             st.plotly_chart(fig)
+
+            # 各変数の箱ひげ図を個別に表示
+            st.subheader('各変数の箱ひげ図')
+            for col in selected_cols:
+                fig = px.box(df, y=col, title=f'【{col}】 の箱ひげ図')
+                st.plotly_chart(fig)
+        else:
+            st.write("少なくとも一つの変数を選択してください。")
     else:
         st.write("数値変数が見つかりませんでした。")
 else:
     pass
-
