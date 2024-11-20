@@ -9,11 +9,11 @@ st.caption("Created by Dit-Lab.(Daiki Ito)")
 st.write("ExcelまたはCSVファイルをアップロードしてください。数値変数の四分位数を表示し、箱ひげ図を描画します。")
 st.write("")
 
-# デモデータを使うかどうかのチェックボックス
-use_demo_data = st.checkbox('デモデータを使用')
-
 # ファイルアップローダー
 uploaded_file = st.file_uploader('ファイルをアップロードしてください (Excel or CSV)', type=['xlsx', 'csv'])
+
+# デモデータを使うかどうかのチェックボックス
+use_demo_data = st.checkbox('デモデータを使用')
 
 if use_demo_data:
     # デモデータを読み込む
