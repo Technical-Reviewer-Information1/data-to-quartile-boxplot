@@ -1,31 +1,37 @@
-# Streamlitライブラリをインポート
 import streamlit as st
+import pandas as pd
+import plotly.express as px
 
-# ページ設定（タブに表示されるタイトル、表示幅）
-st.set_page_config(page_title="タイトル", layout="wide")
+st.set_page_config(page_title="四分位数と箱ひげ図", layout="wide")
 
-# タイトルを設定
-st.title('Streamlitのサンプルアプリ')
+st.title("四分位数と箱ひげ図")
+st.write("ExcelまたはCSVファイルをアップロードしてください。数値変数の四分位数を表示し、箱ひげ図を描画します。")
 
-# テキスト入力ボックスを作成し、ユーザーからの入力を受け取る
-user_input = st.text_input('あなたの名前を入力してください')
+# ファイルアップローダー
+uploaded_file = st.file_uploader('ファイルをアップロードしてください (Excel or CSV)', type=['xlsx', 'csv'])
 
-# ボタンを作成し、クリックされたらメッセージを表示
-if st.button('挨拶する'):
-    if user_input:  # 名前が入力されているかチェック
-        st.success(f'🌟 こんにちは、{user_input}さん! 🌟')  # メッセージをハイライト
+if uploaded_file is not None:
+    if uploaded_file.type == 'text/csv':
+        df = pd.read_csv(uploaded_file)
+        st.write("データの先頭5行を表示します:")
+        st.write(df.head())
     else:
-        st.error('名前を入力してください。')  # エラーメッセージを表示
+        df = pd.read_excel(uploaded_file)
+        st.write("データの先頭5行を表示します:")
+        st.write(df.head())
 
-# スライダーを作成し、値を選択
-number = st.slider('好きな数字（10進数）を選んでください', 0, 100)
+    # 数値変数の抽出
+    numerical_cols = df.select_dtypes(include=['number']).columns.tolist()
 
-# 補足メッセージ
-st.caption("十字キー（左右）でも調整できます。")
+    if numerical_cols:
+        st.subheader('数値変数の四分位数')
+        quartiles_df = df[numerical_cols].quantile([0, 0.25, 0.5, 0.75, 1]).transpose()
+        quartiles_df.columns = ['Min', '25%', '50%', '75%', 'Max']
+        st.write(quartiles_df)
 
-# 選択した数字を表示
-st.write(f'あなたが選んだ数字は「{number}」です。')
-
-# 選択した数値を2進数に変換
-binary_representation = bin(number)[2:]  # 'bin'関数で2進数に変換し、先頭の'0b'を取り除く
-st.info(f'🔢 10進数の「{number}」を2進数で表現すると「{binary_representation}」になります。 🔢')  # 2進数の表示をハイライト
+        st.subheader('箱ひげ図')
+        for col in numerical_cols:
+            fig = px.box(df, y=col, title=f'【{col}】 の箱ひげ図')
+            st.plotly_chart(fig)
+    else:
+        st.write("数値変数が見つかりませんでした。")
