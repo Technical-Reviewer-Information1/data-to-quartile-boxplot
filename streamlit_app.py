@@ -48,20 +48,21 @@ if df is not None:
             quartiles_df.columns = ['Min', '25%', '50%', '75%', 'Max']
             st.write(quartiles_df)
 
-            # 横に並べて比較する箱ひげ図
+            # ■【横に並べた比較用】の箱ひげ図（従来のコード）
             st.subheader('選択した変数の箱ひげ図（比較：横並び）')
             melted_df = df[selected_cols].melt(var_name='Variable', value_name='Value')
-            fig_horizontal = px.box(melted_df, x='Variable', y='Value',
-                                    title='選択した数値変数の箱ひげ図（横並び）')
+            fig_horizontal = px.box(melted_df, x='Variable', y='Value', title='選択した数値変数の箱ひげ図（横並び）')
             st.plotly_chart(fig_horizontal)
 
-            # 縦に並べて比較する箱ひげ図（facet_row を利用）
-            st.subheader('選択した変数の箱ひげ図（比較：縦並び）')
-            fig_vertical = px.box(melted_df, y='Value', facet_row='Variable',
+            # ■【横型の箱ひげ図】を縦に並べる（各変数ごとに横向きの箱ひげ図を1枚の図に縦積み）
+            st.subheader('選択した変数の箱ひげ図（縦並び）')
+            # 「横型」になるように、x軸に値を割り当て、
+            # facet_rowで各変数ごとに1行ずつ表示しています。
+            fig_vertical = px.box(melted_df, x='Value', facet_row='Variable', orientation='h', 
                                   title='選択した数値変数の箱ひげ図（縦並び）')
             st.plotly_chart(fig_vertical)
 
-            # 各変数の箱ひげ図を個別に表示
+            # ■各変数の箱ひげ図を個別に表示
             st.subheader('各変数の箱ひげ図')
             for col in selected_cols:
                 fig = px.box(df, y=col, title=f'【{col}】 の箱ひげ図')
@@ -70,5 +71,3 @@ if df is not None:
             st.write("少なくとも一つの変数を選択してください。")
     else:
         st.write("数値変数が見つかりませんでした。")
-else:
-    pass
