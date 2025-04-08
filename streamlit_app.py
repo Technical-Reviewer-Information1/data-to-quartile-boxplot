@@ -54,20 +54,15 @@ if df is not None:
             fig_horizontal = px.box(melted_df, x='Variable', y='Value', title='選択した数値変数の箱ひげ図（横並び）')
             st.plotly_chart(fig_horizontal)
 
-            # 箱ひげ図の出力（縦並び）の修正
-            st.subheader('選択した変数の箱ひげ図（比較：縦並び）')
-            # 「Variable」列をカテゴリカル型に変換し、選択順を維持
-            melted_df['Variable'] = pd.Categorical(melted_df['Variable'], categories=selected_cols, ordered=True)
-            # 変数の数に合わせて図の高さを調整（例：各変数あたり400px）
-            height = 400 * len(selected_cols)
-            fig_vertical = px.box(melted_df, y='Value', facet_row='Variable',
-                                  title='選択した数値変数の箱ひげ図（縦並び）',
-                                  height=height)
-            # 各サブプロットで独立したy軸スケールとする
-            fig_vertical.update_yaxes(matches=None)
+            # ■【横型の箱ひげ図】を縦に並べる（各変数ごとに横向きの箱ひげ図を1枚の図に縦積み）
+            st.subheader('選択した変数の箱ひげ図（縦並び）')
+            # 「横型」になるように、x軸に値を割り当て、
+            # facet_rowで各変数ごとに1行ずつ表示しています。
+            fig_vertical = px.box(melted_df, x='Value', facet_row='Variable', orientation='h', 
+                                  title='選択した数値変数の箱ひげ図（縦並び）')
             st.plotly_chart(fig_vertical)
 
-            # 各変数の箱ひげ図を個別に表示
+            # ■各変数の箱ひげ図を個別に表示
             st.subheader('各変数の箱ひげ図')
             for col in selected_cols:
                 fig = px.box(df, y=col, title=f'【{col}】 の箱ひげ図')
