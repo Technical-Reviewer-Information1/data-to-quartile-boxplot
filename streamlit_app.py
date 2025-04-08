@@ -48,11 +48,18 @@ if df is not None:
             quartiles_df.columns = ['Min', '25%', '50%', '75%', 'Max']
             st.write(quartiles_df)
 
-            st.subheader('選択した変数の箱ひげ図（比較）')
-            # 選択した変数の箱ひげ図を一つの図で表示
+            # 横に並べて比較する箱ひげ図
+            st.subheader('選択した変数の箱ひげ図（比較：横並び）')
             melted_df = df[selected_cols].melt(var_name='Variable', value_name='Value')
-            fig = px.box(melted_df, x='Variable', y='Value', title='選択した数値変数の箱ひげ図')
-            st.plotly_chart(fig)
+            fig_horizontal = px.box(melted_df, x='Variable', y='Value',
+                                    title='選択した数値変数の箱ひげ図（横並び）')
+            st.plotly_chart(fig_horizontal)
+
+            # 縦に並べて比較する箱ひげ図（facet_row を利用）
+            st.subheader('選択した変数の箱ひげ図（比較：縦並び）')
+            fig_vertical = px.box(melted_df, y='Value', facet_row='Variable',
+                                  title='選択した数値変数の箱ひげ図（縦並び）')
+            st.plotly_chart(fig_vertical)
 
             # 各変数の箱ひげ図を個別に表示
             st.subheader('各変数の箱ひげ図')
