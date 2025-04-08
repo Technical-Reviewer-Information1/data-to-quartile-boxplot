@@ -51,14 +51,14 @@ if df is not None:
             # ■【横に並べた比較用】の箱ひげ図（従来のコード）
             st.subheader('選択した変数の箱ひげ図（比較：横並び）')
             melted_df = df[selected_cols].melt(var_name='Variable', value_name='Value')
-            fig_horizontal = px.box(melted_df, x=selected_cols, y='Value', title='選択した数値変数の箱ひげ図（横並び）')
+            fig_horizontal = px.box(melted_df, x='Variable', y='Value', title='選択した数値変数の箱ひげ図（横並び）')
             st.plotly_chart(fig_horizontal)
 
             # ■【横型の箱ひげ図】を縦に並べる（各変数ごとに横向きの箱ひげ図を1枚の図に縦積み）
             st.subheader('選択した変数の箱ひげ図（縦並び）')
             # 「横型」になるように、x軸に値を割り当て、
             # facet_rowで各変数ごとに1行ずつ表示しています。
-            fig_vertical = px.box(melted_df, x='Value', facet_row=selected_cols, orientation='h', 
+            fig_vertical = px.box(melted_df, x='Value', facet_row='Variable', orientation='h', 
                                   title='選択した数値変数の箱ひげ図（縦並び）')
             st.plotly_chart(fig_vertical)
 
