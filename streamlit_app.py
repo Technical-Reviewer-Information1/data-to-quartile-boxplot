@@ -4,8 +4,10 @@ import plotly.express as px
 
 st.set_page_config(page_title="四分位数と箱ひげ図", layout="wide")
 
-st.title("四分位数と箱ひげ図")
+st.title("四分位数と箱ひげ図（pp.21-22）")
 st.caption("Created by Dit-Lab.(Daiki Ito)")
+st.caption("Supported by Tomoaki ATSUMI")
+
 st.write("ExcelまたはCSVファイルをアップロードしてください。数値変数の四分位数を表示し、箱ひげ図を描画します。")
 st.write("")
 
