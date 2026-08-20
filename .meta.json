@@ -4,9 +4,10 @@
  "pp": "pp.21-22",
  "lead": "箱ひげ図は「データを4等分した目印」を並べただけの図です。数を並べ替えるところから手を動かして、箱とひげの意味をつかみましょう。",
  "scripts": [
+  "tools.js",
   "chart.js",
-  "grid.js",
   "xlsx.js",
+  "grid.js",
   "datainput.js",
   "terms.js",
   "app.js"
