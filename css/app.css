@@ -1,0 +1,14 @@
+.chips{display:flex; flex-wrap:wrap; gap:6px; min-height:44px; padding:9px;
+  border:1px solid var(--rule-2); background:var(--paper)}
+.chip{display:inline-block; font-family:var(--mono); font-weight:700; font-size:.94rem;
+  padding:4px 10px; border:1px solid var(--rule); background:var(--paper); min-width:42px; text-align:center}
+.chip.q1{border-color:var(--accent); background:var(--accent-w); color:var(--accent)}
+.chip.q2{border-color:#8a5a00; background:var(--warn-bg); color:#8a5a00}
+.chip.q3{border-color:var(--accent); background:var(--accent-w); color:var(--accent)}
+.chip.half{background:#f4f6fa}
+.chip.out{border-color:var(--ng); color:var(--ng)}
+.chip.dim{opacity:.45}
+input[type=range]{width:100%; accent-color:var(--accent); height:34px}
+.tree-legend{display:flex; gap:16px; flex-wrap:wrap; font-size:.79rem; color:var(--ink-2); align-items:center}
+.tree-legend .sw{width:20px; height:3px; display:inline-block}
+.metric .v{font-size:1.35rem}
