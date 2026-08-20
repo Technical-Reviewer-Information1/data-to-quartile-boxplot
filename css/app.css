@@ -12,3 +12,12 @@ input[type=range]{width:100%; accent-color:var(--accent); height:34px}
 .tree-legend{display:flex; gap:16px; flex-wrap:wrap; font-size:.79rem; color:var(--ink-2); align-items:center}
 .tree-legend .sw{width:20px; height:3px; display:inline-block}
 .metric .v{font-size:1.35rem}
+.qhead{display:flex; justify-content:space-between; align-items:center; margin-bottom:12px}
+.card-q{border:1px solid var(--rule); background:var(--paper); padding:18px; margin-bottom:14px}
+.q-scene{font-size:1rem; font-weight:700; line-height:1.9}
+.choice4{display:grid; gap:8px; grid-template-columns:repeat(auto-fit,minmax(150px,1fr))}
+.choice4 .btn{text-align:left; line-height:1.6; padding:10px 13px}
+.choice4 .btn.correct{background:var(--ok-bg); border-color:var(--ok); color:var(--ok)}
+.choice4 .btn.wrong{background:var(--ng-bg); border-color:var(--ng); color:var(--ng)}
+.choice4.locked{pointer-events:none}
+#myTable td{font-family:var(--mono)}

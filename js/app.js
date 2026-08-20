@@ -1,6 +1,6 @@
 (function () {
   'use strict';
-  const C = window.Chart, $ = id => document.getElementById(id);
+  const C = window.Chart, T = window.Tools, $ = id => document.getElementById(id);
 
   const SETS = {
     odd:     { raw: [58, 72, 45, 90, 66, 51, 78, 63, 84], label: '9個（奇数）' },
@@ -137,13 +137,153 @@
                mean: CMP.reduce((a,b)=>a+b,0)/CMP.length }] });
   }
 
+
+  /* ---------- STEP5 本文形式の読み取り演習 ---------- */
+  const FIGS = {
+    exam: { title: '図1　1学年200名の英語と数学のテストの結果（単位：点）',
+      rows: [
+        { name: '英語', min: 42, q1: 66, med: 76, q3: 90, max: 100 },
+        { name: '数学', min: 20, q1: 50, med: 68, q3: 84, max: 100 }
+      ], xMin: 0, xMax: 105, n: 200 },
+    city: { title: '図2　3つの都市の2025年8月における日別最高気温（外れ値は○）',
+      rows: [
+        { name: 'A市', min: 29.0, q1: 31.5, med: 33.0, q3: 35.0, max: 36.5, outliers: [27.0] },
+        { name: 'B市', min: 30.5, q1: 33.0, med: 34.5, q3: 36.0, max: 39.5, outliers: [] },
+        { name: 'C市', min: 32.0, q1: 35.0, med: 37.0, q3: 38.5, max: 39.0, outliers: [] }
+      ], xMin: 25, xMax: 41, n: 31 }
+  };
+  const READQ = [
+    { fig: 'exam', t: '数学の中央値は英語の第1四分位数よりも大きい。この記述は図から読み取れるか。',
+      choices: ['読み取れる', '読み取れない'], a: '読み取れる',
+      why: '数学の中央値は68点、英語の第1四分位数は66点。68 > 66 なので読み取れます。値そのものを比べるだけで判断できます。' },
+    { fig: 'exam', t: '英語の点数の散らばりは数学と比べると小さい。この記述は図から読み取れるか。',
+      choices: ['読み取れる', '読み取れない'], a: '読み取れる',
+      why: '英語の箱（Q1〜Q3）は66〜90で幅24点、数学は50〜84で幅34点。四分位範囲も全体の幅も英語のほうが小さいので、散らばりは小さいと言えます。' },
+    { fig: 'exam', t: '英語のテストでは上位25％の生徒は90点以上である。この記述は図から読み取れるか。',
+      choices: ['読み取れる', '読み取れない'], a: '読み取れる',
+      why: '第3四分位数が90点なので、90点以上がちょうど上位25％にあたります。200人なら約50人です。' },
+    { fig: 'exam', t: '数学のテストが50点以下であった生徒は少なくとも50人はいる。この記述は図から読み取れるか。',
+      choices: ['読み取れる', '読み取れない'], a: '読み取れる',
+      why: '数学の第1四分位数が50点。下位25％、つまり200×0.25＝50人が50点以下の側にいます。「少なくとも50人」と言えます。' },
+    { fig: 'exam', t: '英語で80点をとった生徒は何人いるかがわかる。この記述は図から読み取れるか。',
+      choices: ['読み取れる', '読み取れない'], a: '読み取れない',
+      why: '箱ひげ図は5つの目印だけを示す図です。<strong>特定の点数の人数は読み取れません。</strong>そこはヒストグラムの役割です。' },
+    { fig: 'city', t: '3つの都市のうち、最小値が最も大きい都市はC市である。',
+      choices: ['正しい', '正しくない'], a: '正しい',
+      why: 'ひげの左端はA市29.0℃（外れ値27.0を除く）、B市30.5℃、C市32.0℃。C市がもっとも大きくなっています。' },
+    { fig: 'city', t: 'B市の最大値が最も大きいので、B市は8月中で最も暑かった日が多いといえる。',
+      choices: ['正しい', '正しくない'], a: '正しくない',
+      why: '最大値が大きいのは「その1日が暑かった」ことしか意味しません。全体としてはC市のほうが中央値もQ3も高く、暑い日が多いといえます。' },
+    { fig: 'city', t: 'A市の最大値よりC市の中央値のほうが大きいので、C市がA市の最大値を上回った日は31日のうち16日以上ある。',
+      choices: ['正しい', '正しくない'], a: '正しい',
+      why: 'C市の中央値は37.0℃で、A市の最大値36.5℃より大きい。中央値以上の日は全体の半分（31日なら16日）以上あるので、その16日以上はすべて A市の最大値36.5℃を上回っていたことになります。<strong>中央値と他都市の最大値を比べると、日数まで言える</strong>のがこの図の強みです。' },
+    { fig: 'city', t: 'C市のほうが第3四分位数が大きいので、38.0℃以上だった日数もC市のほうが多いといえる。',
+      choices: ['正しい', '正しくない'], a: '正しくない',
+      why: '第3四分位数の大小からは「上位25％の境目」しかわかりません。<strong>特定の温度以上の日数は箱ひげ図からは数えられません。</strong>' }
+  ];
+  let rList = [], ri = 0, rScore = 0;
+  function startRead() { rList = shuffle(READQ); ri = 0; rScore = 0; renderRead(); }
+  function renderRead() {
+    if (ri >= rList.length) {
+      $('qText').textContent = rScore + ' / ' + rList.length + ' 問正解';
+      $('qChoices').innerHTML = ''; $('qFb').hidden = true; $('qNext').disabled = true;
+      $('qProgress').textContent = rList.length + ' / ' + rList.length; return;
+    }
+    const it = rList[ri], f = FIGS[it.fig];
+    $('figTitle').textContent = f.title;
+    C.box5($('qFigure'), { W: 620, H: 60 + f.rows.length * 52, labelW: 62,
+      xMin: f.xMin, xMax: f.xMax, rows: f.rows });
+    $('qProgress').textContent = (ri + 1) + ' / ' + rList.length;
+    $('qScore').textContent = rScore;
+    $('qText').textContent = it.t;
+    const box = $('qChoices'); box.className = 'choice4'; box.innerHTML = '';
+    it.choices.forEach(c => {
+      const b = document.createElement('button');
+      b.className = 'btn'; b.textContent = c; b.dataset.c = c;
+      b.addEventListener('click', () => answerRead(c));
+      box.appendChild(b);
+    });
+    $('qFb').hidden = true; $('qNext').disabled = true;
+    $('qNext').textContent = (ri === rList.length - 1) ? '結果を見る' : '次の問題';
+  }
+  function answerRead(c) {
+    const it = rList[ri], ok = c === it.a, box = $('qChoices');
+    box.classList.add('locked');
+    [...box.children].forEach(b => {
+      if (b.dataset.c === it.a) b.classList.add('correct');
+      else if (b.dataset.c === c) b.classList.add('wrong');
+    });
+    if (ok) rScore++;
+    const fb = $('qFb');
+    fb.className = 'note ' + (ok ? 'ok' : 'ng');
+    fb.innerHTML = (ok ? '正解。' : '正解は「<strong>' + it.a + '</strong>」。') + it.why;
+    fb.hidden = false;
+    $('qScore').textContent = rScore; $('qNext').disabled = false;
+  }
+  const shuffle = a => { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+
+  /* ---------- STEP6 自分のデータ ---------- */
+  function calcMine() {
+    const lines = $('pasteBox').value.split('\n').filter(l => l.trim());
+    const groups = [];
+    lines.forEach((l, i) => {
+      const m = l.split(/[:：]/);
+      const name = m.length > 1 ? m[0].trim() : 'グループ' + (i + 1);
+      const vals = T.numbers(m.length > 1 ? m.slice(1).join(':') : l);
+      if (vals.length >= 4) groups.push({ name, vals });
+    });
+    const n = $('myNote');
+    if (!groups.length) {
+      n.hidden = false; n.className = 'note ng';
+      n.textContent = '読み取れませんでした。1行に4つ以上の数値を入力してください。';
+      $('myChart').innerHTML = ''; $('myTable').innerHTML = ''; $('myTools').innerHTML = '';
+      return;
+    }
+    const rows = groups.map(g => {
+      const q = quartiles(g.vals);
+      return { name: g.name, min: q.whiskLo, q1: q.q1, med: q.q2, q3: q.q3, max: q.whiskHi,
+               outliers: q.out, mean: g.vals.reduce((a, b) => a + b, 0) / g.vals.length, _q: q, _n: g.vals.length };
+    });
+    const all = groups.flatMap(g => g.vals);
+    C.box5($('myChart'), { W: 640, H: 60 + rows.length * 54, labelW: 76,
+      xMin: Math.min(...all) - (Math.max(...all) - Math.min(...all)) * .08,
+      xMax: Math.max(...all) + (Math.max(...all) - Math.min(...all)) * .08, rows });
+    $('myTable').innerHTML = '<thead><tr><th>グループ</th><th>個数</th><th>最小</th><th>Q1</th><th>中央値</th><th>Q3</th><th>最大</th><th>IQR</th><th>平均</th><th>外れ値</th></tr></thead><tbody>' +
+      rows.map(r => '<tr><td>' + r.name + '</td><td>' + r._n + '</td><td>' + r._q.min + '</td><td>' + r._q.q1 +
+        '</td><td>' + r._q.q2 + '</td><td>' + r._q.q3 + '</td><td>' + r._q.max + '</td><td>' + r._q.iqr +
+        '</td><td>' + r.mean.toFixed(2) + '</td><td>' + (r.outliers.length ? r.outliers.join(', ') : 'なし') + '</td></tr>').join('') +
+      '</tbody>';
+    const withOut = rows.filter(r => r.outliers.length);
+    n.hidden = false;
+    n.className = withOut.length ? 'note warn' : 'note info';
+    n.innerHTML = groups.length + ' グループを比べました。' +
+      (withOut.length ? '<strong>' + withOut.map(r => r.name).join('・') + '</strong> に外れ値があります（○印）。記録ミスか、本当に特別な値かを確かめましょう。'
+                      : '外れ値と判定された値はありません。箱の長さ（IQR）を比べると、ばらつきの大きいグループがわかります。');
+    $('myTools').innerHTML = '';
+    $('myTools').appendChild(T.saveButton(() => $('myChart').querySelector('svg'), '箱ひげ図'));
+    const sh = document.createElement('button');
+    sh.className = 'btn sm ghost'; sh.textContent = 'このデータのURLを作る';
+    sh.addEventListener('click', () => T.share({ t: $('pasteBox').value }, sh));
+    $('myTools').appendChild(sh);
+    const pr = document.createElement('button');
+    pr.className = 'btn sm ghost'; pr.textContent = '印刷する';
+    pr.addEventListener('click', T.printPage);
+    $('myTools').appendChild(pr);
+  }
+
   function init() {
     document.querySelectorAll('[data-set]').forEach(b => b.addEventListener('click', () => setData(b.dataset.set)));
     $('shuffleBtn').addEventListener('click', () => { raw = raw.slice().sort(() => Math.random() - .5); stage = 0; renderChips(); });
     $('stepBtn').addEventListener('click', () => { stage++; renderChips(); });
     $('stepReset').addEventListener('click', () => { stage = 0; renderChips(); });
     $('maxSlider').addEventListener('input', drawLive);
-    setData('odd'); drawLive(); drawCompare();
+    $('qNext').addEventListener('click', () => { ri++; renderRead(); });
+    $('qReset').addEventListener('click', startRead);
+    $('calcMine').addEventListener('click', calcMine);
+    $('clearMine').addEventListener('click', () => { $('pasteBox').value = ''; $('myChart').innerHTML = ''; $('myTable').innerHTML = ''; $('myNote').hidden = true; $('myTools').innerHTML = ''; });
+    const shared = T.readShared();
+    if (shared && shared.t) $('pasteBox').value = shared.t;
+    setData('odd'); drawLive(); drawCompare(); startRead(); calcMine();
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init); else init();
 })();
