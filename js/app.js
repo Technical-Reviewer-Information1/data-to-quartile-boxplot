@@ -223,47 +223,68 @@
   const shuffle = a => { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
 
   /* ---------- STEP6 自分のデータ ---------- */
+  let grid = null, gh = [];
+  function refreshCols(rows, hdr) {
+    gh = hdr;
+    const nums = grid.numericColumns();
+    const g = $('gCol'), v = $('vCol');
+    const pg = g.value, pv = v.value;
+    g.innerHTML = '<option value="-1">（グループ分けしない）</option>' +
+      hdr.map((h, j) => '<option value="' + j + '">' + h + '</option>').join('');
+    v.innerHTML = hdr.map((h, j) => '<option value="' + j + '"' + (nums.indexOf(j) < 0 ? ' disabled' : '') +
+      '>' + h + (nums.indexOf(j) < 0 ? '（数値でない列）' : '') + '</option>').join('');
+    if (pg !== '' && +pg < hdr.length) g.value = pg;
+    else { const t = hdr.map((_, j) => j).find(j => nums.indexOf(j) < 0); g.value = (t != null ? t : -1); }
+    if (pv !== '' && v.querySelector('option[value="' + pv + '"]:not([disabled])')) v.value = pv;
+    else if (nums.length) v.value = nums[0];
+    calcMine();
+  }
   function calcMine() {
-    const lines = $('pasteBox').value.split('\n').filter(l => l.trim());
-    const groups = [];
-    lines.forEach((l, i) => {
-      const m = l.split(/[:：]/);
-      const name = m.length > 1 ? m[0].trim() : 'グループ' + (i + 1);
-      const vals = T.numbers(m.length > 1 ? m.slice(1).join(':') : l);
-      if (vals.length >= 4) groups.push({ name, vals });
+    if (!grid) return;
+    const G = window.DataGrid;
+    const gj = +$('gCol').value, vj = +$('vCol').value;
+    const rows = grid.getData();
+    const map = new Map();
+    rows.forEach(r => {
+      const val = G.strNum(r[vj]);
+      if (val == null) return;
+      const key = gj < 0 ? 'すべて' : (String(r[gj] || '').trim() || '（未分類）');
+      if (!map.has(key)) map.set(key, []);
+      map.get(key).push(val);
     });
+    const groups = [...map.entries()].filter(([, v]) => v.length >= 4);
     const n = $('myNote');
     if (!groups.length) {
       n.hidden = false; n.className = 'note ng';
-      n.textContent = '読み取れませんでした。1行に4つ以上の数値を入力してください。';
-      $('myChart').innerHTML = ''; $('myTable').innerHTML = ''; $('myTools').innerHTML = '';
+      n.textContent = '1グループにつき4つ以上の数値が必要です。値の列に数値の列をえらんでください。';
+      ['myChart', 'myTable', 'myTools'].forEach(i => $(i).innerHTML = '');
       return;
     }
-    const rows = groups.map(g => {
-      const q = quartiles(g.vals);
-      return { name: g.name, min: q.whiskLo, q1: q.q1, med: q.q2, q3: q.q3, max: q.whiskHi,
-               outliers: q.out, mean: g.vals.reduce((a, b) => a + b, 0) / g.vals.length, _q: q, _n: g.vals.length };
+    const rowsOut = groups.map(([name, vals]) => {
+      const q = quartiles(vals);
+      return { name, min: q.whiskLo, q1: q.q1, med: q.q2, q3: q.q3, max: q.whiskHi, outliers: q.out,
+               mean: vals.reduce((a, b) => a + b, 0) / vals.length, _q: q, _n: vals.length };
     });
-    const all = groups.flatMap(g => g.vals);
-    C.box5($('myChart'), { W: 640, H: 60 + rows.length * 54, labelW: 76,
-      xMin: Math.min(...all) - (Math.max(...all) - Math.min(...all)) * .08,
-      xMax: Math.max(...all) + (Math.max(...all) - Math.min(...all)) * .08, rows });
+    const all = groups.flatMap(([, v]) => v);
+    const pad = (Math.max(...all) - Math.min(...all)) * .08 || 1;
+    C.box5($('myChart'), { W: 660, H: 60 + rowsOut.length * 54, labelW: 92,
+      xMin: Math.min(...all) - pad, xMax: Math.max(...all) + pad, rows: rowsOut });
     $('myTable').innerHTML = '<thead><tr><th>グループ</th><th>個数</th><th>最小</th><th>Q1</th><th>中央値</th><th>Q3</th><th>最大</th><th>IQR</th><th>平均</th><th>外れ値</th></tr></thead><tbody>' +
-      rows.map(r => '<tr><td>' + r.name + '</td><td>' + r._n + '</td><td>' + r._q.min + '</td><td>' + r._q.q1 +
+      rowsOut.map(r => '<tr><td>' + r.name + '</td><td>' + r._n + '</td><td>' + r._q.min + '</td><td>' + r._q.q1 +
         '</td><td>' + r._q.q2 + '</td><td>' + r._q.q3 + '</td><td>' + r._q.max + '</td><td>' + r._q.iqr +
         '</td><td>' + r.mean.toFixed(2) + '</td><td>' + (r.outliers.length ? r.outliers.join(', ') : 'なし') + '</td></tr>').join('') +
       '</tbody>';
-    const withOut = rows.filter(r => r.outliers.length);
+    const withOut = rowsOut.filter(r => r.outliers.length);
     n.hidden = false;
     n.className = withOut.length ? 'note warn' : 'note info';
-    n.innerHTML = groups.length + ' グループを比べました。' +
+    n.innerHTML = groups.length + ' グループを比べました（緑の◆は平均値）。' +
       (withOut.length ? '<strong>' + withOut.map(r => r.name).join('・') + '</strong> に外れ値があります（○印）。記録ミスか、本当に特別な値かを確かめましょう。'
                       : '外れ値と判定された値はありません。箱の長さ（IQR）を比べると、ばらつきの大きいグループがわかります。');
     $('myTools').innerHTML = '';
     $('myTools').appendChild(T.saveButton(() => $('myChart').querySelector('svg'), '箱ひげ図'));
     const sh = document.createElement('button');
     sh.className = 'btn sm ghost'; sh.textContent = 'このデータのURLを作る';
-    sh.addEventListener('click', () => T.share({ t: $('pasteBox').value }, sh));
+    sh.addEventListener('click', () => T.share({ d: grid.getRaw(), h: grid.getHeader(), g: gj, v: vj }, sh));
     $('myTools').appendChild(sh);
     const pr = document.createElement('button');
     pr.className = 'btn sm ghost'; pr.textContent = '印刷する';
@@ -280,10 +301,21 @@
     $('qNext').addEventListener('click', () => { ri++; renderRead(); });
     $('qReset').addEventListener('click', startRead);
     $('calcMine').addEventListener('click', calcMine);
-    $('clearMine').addEventListener('click', () => { $('pasteBox').value = ''; $('myChart').innerHTML = ''; $('myTable').innerHTML = ''; $('myNote').hidden = true; $('myTools').innerHTML = ''; });
+    ['gCol', 'vCol'].forEach(i => $(i).addEventListener('change', calcMine));
     const shared = T.readShared();
-    if (shared && shared.t) $('pasteBox').value = shared.t;
-    setData('odd'); drawLive(); drawCompare(); startRead(); calcMine();
+    const initData = (shared && shared.d) ? shared.d : [
+      ['A組','58'],['A組','60'],['A組','61'],['A組','62'],['A組','62'],['A組','63'],['A組','64'],['A組','65'],['A組','66'],['A組','69'],
+      ['B組','35'],['B組','42'],['B組','48'],['B組','55'],['B組','62'],['B組','68'],['B組','74'],['B組','80'],['B組','88'],['B組','78'],
+      ['C組','50'],['C組','52'],['C組','55'],['C組','58'],['C組','60'],['C組','62'],['C組','64'],['C組','66'],['C組','70'],['C組','95']
+    ];
+    const initHeader = (shared && shared.h) ? shared.h : ['クラス', '点数'];
+    grid = window.DataInput.create($('dataInput'), {
+      header: initHeader, data: initData, minRows: 4, onChange: refreshCols
+    });
+    window.Terms.glossary($('glossBox'), ['四分位数', '四分位範囲', '外れ値', '箱ひげ図', '中央値', '平均値', 'ヒストグラム']);
+    setData('odd'); drawLive(); drawCompare(); startRead();
+    refreshCols(grid.getData(), grid.getHeader());
+    window.Terms.attach();
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init); else init();
 })();

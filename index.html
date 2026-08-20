@@ -128,16 +128,14 @@
 
   <section class="step" id="step6">
     <h2><span class="no">STEP 6</span>自分のデータで箱ひげ図を作る</h2>
-    <p class="desc">グループごとに数値を貼り付けると、まとめて箱ひげ図にします。探究で集めたデータの比較に使えます。</p>
+    <p class="desc">Excelファイル（.xlsx）やCSVを読み込むか、表に直接入力してください。<strong>1行に1件</strong>、グループ名と値を入れるとグループごとに比べられます。</p>
     <div class="panel">
-      <label class="fld" for="pasteBox">1行につき1グループ。「グループ名: 値, 値, 値 …」の形で入力（値だけの行でも可）</label>
-      <textarea id="pasteBox" class="paste-area" spellcheck="false">A組: 58,60,61,62,62,63,64,65,66,69
-B組: 35,42,48,55,62,68,74,80,88,78
-C組: 50,52,55,58,60,62,64,66,70,95</textarea>
-      <div class="btn-row" style="margin-top:10px">
-        <button class="btn primary" id="calcMine">箱ひげ図を作る</button>
-        <button class="btn ghost" id="clearMine">消す</button>
+      <div id="dataInput"></div>
+      <div class="grid c2" style="margin-top:16px">
+        <div><label class="fld" for="gCol">グループに使う列（なしでも可）</label><select id="gCol" class="sel"></select></div>
+        <div><label class="fld" for="vCol">値に使う列（数値）</label><select id="vCol" class="sel"></select></div>
       </div>
+      <div class="btn-row" style="margin-top:12px"><button class="btn primary" id="calcMine">箱ひげ図を作る</button></div>
       <div class="note" id="myNote" hidden style="margin-top:12px"></div>
       <div id="myChart" style="margin-top:12px"></div>
       <div class="tbl-scroll" style="margin-top:12px"><table class="tbl" id="myTable"></table></div>
@@ -145,11 +143,16 @@ C組: 50,52,55,58,60,62,64,66,70,95</textarea>
     </div>
   </section>
 
+  <section class="step" id="glossary">
+    <h2><span class="no">用語</span>この節で出てくることば</h2>
+    <div id="glossBox"></div>
+  </section>
+
   <section class="step">
     <h2><span class="no">まとめ</span>試験で問われること</h2>
     <ul style="margin:0;padding-left:1.2em;color:var(--ink-2);font-size:.92rem;line-height:2.05">
-      <li>四分位範囲 <strong>IQR＝Q3−Q1</strong>。箱の長さそのものです。</li>
-      <li>外れ値の目安は <strong>Q1−1.5×IQR より小さい</strong>、または <strong>Q3＋1.5×IQR より大きい</strong>値。</li>
+      <li><span class="term" data-t="四分位範囲">四分位範囲</span> <strong>IQR＝Q3−Q1</strong>。箱の長さそのものです。</li>
+      <li><span class="term" data-t="外れ値">外れ値</span>の目安は <strong>Q1−1.5×IQR より小さい</strong>、または <strong>Q3＋1.5×IQR より大きい</strong>値。</li>
       <li>データの個数が偶数のときの中央値は<strong>まん中2つの平均</strong>。</li>
       <li>箱ひげ図からは<strong>平均値は読めません</strong>（中央値とはちがう値です）。</li>
     </ul>
@@ -181,6 +184,10 @@ C組: 50,52,55,58,60,62,64,66,70,95</textarea>
 
 <script src="js/tools.js"></script>
 <script src="js/chart.js"></script>
+<script src="js/grid.js"></script>
+<script src="js/xlsx.js"></script>
+<script src="js/datainput.js"></script>
+<script src="js/terms.js"></script>
 <script src="js/app.js"></script>
 </body>
 </html>

@@ -21,3 +21,5 @@ input[type=range]{width:100%; accent-color:var(--accent); height:34px}
 .choice4 .btn.wrong{background:var(--ng-bg); border-color:var(--ng); color:var(--ng)}
 .choice4.locked{pointer-events:none}
 #myTable td{font-family:var(--mono)}
+.sel{width:100%; font-family:inherit; font-size:.95rem; padding:9px 11px; min-height:42px;
+  border:1px solid var(--ink-3); border-radius:2px; background:var(--paper); color:var(--ink)}
